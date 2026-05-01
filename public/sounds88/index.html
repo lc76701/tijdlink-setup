@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Klankenbord</title>
 <style>
-/* Je bestaande CSS blijft hetzelfde */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -50,7 +49,7 @@ button:active {
 <div id="soundboard"></div>
 
 <script>
-const sounds = [ /* je lijst blijft hetzelfde */ 
+const sounds = [
     "Heheey.mp3", "Ja goed hoor.mp3", "MJaa.mp3", "Nee.mp3",
     "Met jou ook.mp3", "Ja doe maar.mp3", "Ooo wat geil.mp3",
     "Oo wacht even.mp3", "Ja zometeen.mp3", "Ik hoor je niet.mp3",
@@ -62,8 +61,6 @@ const sounds = [ /* je lijst blijft hetzelfde */
 ];
 
 let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
-
-// Globale audio (maar we maken vaak een nieuwe instance op iOS)
 let audio = new Audio();
 
 function getPath(file) {
@@ -77,36 +74,30 @@ function sortSounds() {
 function playSound(file) {
     const filePath = getPath(file);
     
-    // Belangrijk voor iOS: nieuwe Audio instance per play
     audio.pause();
-    audio = new Audio();
-    audio.preload = "metadata";           // beter dan "auto" op iOS
+    audio = new Audio();           // Nieuwe instance voor iOS
+    audio.preload = "metadata";
     audio.setAttribute("playsinline", "");
-    
     audio.src = filePath;
-    
-    // Wacht op metadata voordat we play() aanroepen
+
+    // Wacht op metadata (cruciaal op iOS)
     audio.addEventListener('loadedmetadata', () => {
-        const promise = audio.play();
-        if (promise !== undefined) {
-            promise.catch(err => {
-                console.error("Play error voor", file, ":", err.name, err.message);
-                
-                // Fallback: probeer nog een keer
-                setTimeout(() => {
-                    audio.play().catch(e => console.error("Fallback mislukt:", e));
-                }, 150);
-            });
-        }
+        audio.play().catch(err => {
+            console.error("Play error:", err.name, err.message);
+            // Extra fallback
+            setTimeout(() => audio.play().catch(e => console.error(e)), 200);
+        });
     }, { once: true });
-    
-    audio.load();   // Forceer laden op iOS
-    
-    // Vibratie + counter
-    if (navigator.vibrate) navigator.vibrate(20);
-    
+
+    audio.load();
+
+    // Teller updaten + UI verversen
     playCounts[file] = (playCounts[file] || 0) + 1;
     localStorage.setItem("playCounts", JSON.stringify(playCounts));
+    
+    render();           // ← Belangrijk!
+    
+    if (navigator.vibrate) navigator.vibrate(20);
 }
 
 function render() {
@@ -121,7 +112,6 @@ function render() {
         
         btn.innerHTML = `${label}<div class="plays">${plays}x</div>`;
         
-        // Gebruik touchend + click voor betere iOS-ondersteuning
         const handler = () => playSound(file);
         btn.addEventListener("click", handler);
         btn.addEventListener("touchend", handler, { passive: true });
