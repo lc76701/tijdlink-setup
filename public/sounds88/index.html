@@ -60,7 +60,7 @@ button:active {
 <div id="soundboard"></div>
 
 <script>
-const BASE_PATH = "/sounds88/sounds/"; // 🔥 JOUW CORRECTE ROOT PAD
+const BASE_PATH = "/sounds88/sounds/"; // 🔥 jouw echte root
 
 const sounds = [
     "Heheey.mp3",
@@ -88,7 +88,8 @@ let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
 let currentAudio = null;
 
 function getPath(file) {
-    return BASE_PATH + encodeURIComponent(file);
+    // 🔥 BELANGRIJK: spaties veilig encoden
+    return BASE_PATH + encodeURI(file);
 }
 
 function render() {
@@ -99,9 +100,10 @@ function render() {
         const btn = document.createElement("button");
 
         const plays = playCounts[file] || 0;
+        const label = file.replace(".mp3", "");
 
         btn.innerHTML = `
-            ${file.replace(".mp3","")}
+            ${label}
             <div class="plays">${plays}x</div>
         `;
 
@@ -112,12 +114,17 @@ function render() {
                 currentAudio.currentTime = 0;
             }
 
-            currentAudio = new Audio(getPath(file));
+            // 🔥 extra iOS-safe audio init
+            currentAudio = new Audio();
+            currentAudio.src = getPath(file);
             currentAudio.preload = "auto";
             currentAudio.setAttribute("playsinline", "");
 
-            const p = currentAudio.play();
-            if (p) p.catch(e => console.log(e));
+            const playPromise = currentAudio.play();
+
+            if (playPromise) {
+                playPromise.catch(err => console.log("Play error:", err));
+            }
 
             playCounts[file] = (playCounts[file] || 0) + 1;
             localStorage.setItem("playCounts", JSON.stringify(playCounts));
