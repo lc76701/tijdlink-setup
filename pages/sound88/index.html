@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klankenbord</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #111;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    padding: 10px;
+    font-size: 18px;
+}
+
+/* 🔥 Veel knoppen op scherm */
+#soundboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+    padding: 8px;
+}
+
+button {
+    background: #222;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 6px;
+    font-size: 13px;
+    color: white;
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+button:active {
+    transform: scale(0.95);
+    background: #444;
+}
+
+.plays {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+}
+
+/* 📱 Extra compact op mobiel */
+@media (max-width: 480px) {
+    #soundboard {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    button {
+        font-size: 12px;
+        padding: 10px 5px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎧 Klankenbord</h1>
+<div id="soundboard"></div>
+
+<script>
+const sounds = [
+    "Heheey.mp3",
+    "Ja goed hoor.mp3",
+    "MJaa.mp3",
+    "Nee.mp3",
+    "Met jou ook.mp3",
+    "Ja doe maar.mp3",
+    "Ooo wat geil.mp3",
+    "Oo wacht even.mp3",
+    "Ja zometeen.mp3",
+    "Ik hoor je niet.mp3",
+    "Okee.mp3",
+    "Ja ik hoor je.mp3",
+    "Eerst even klaarkomen.mp3",
+    "Vond je het geil?.mp3",
+    "Tot de volgende keer.mp3",
+    "Ja oke is goed dat wil ik wel.mp3",
+    "Waarom zo ongeduldig.mp3",
+    "Ja ik wil eerst even klaarkomen.mp3",
+    "Mag ik jou zien komen mag ik jou zien klaarkomen.mp3"
+];
+
+let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
+let currentAudio = null;
+
+function getPath(file) {
+    return "sounds/" + encodeURIComponent(file);
+}
+
+function sortSounds() {
+    sounds.sort((a, b) => {
+        return (playCounts[b] || 0) - (playCounts[a] || 0);
+    });
+}
+
+function render() {
+    const board = document.getElementById("soundboard");
+    board.innerHTML = "";
+
+    sortSounds();
+
+    sounds.forEach(file => {
+        const btn = document.createElement("button");
+        const plays = playCounts[file] || 0;
+
+        const label = file.replace(".mp3", "");
+
+        btn.innerHTML = `
+            ${label}
+            <div class="plays">${plays}x</div>
+        `;
+
+        btn.onclick = () => {
+            // stop vorige audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            // speel nieuwe
+            currentAudio = new Audio(getPath(file));
+            currentAudio.play();
+
+            // kleine vibratie (mobiel)
+            if (navigator.vibrate) navigator.vibrate(30);
+
+            // update teller
+            playCounts[file] = (playCounts[file] || 0) + 1;
+            localStorage.setItem("playCounts", JSON.stringify(playCounts));
+
+            render();
+        };
+
+        board.appendChild(btn);
+    });
+}
+
+render();
+</script>
+
+</body>
+</html>
