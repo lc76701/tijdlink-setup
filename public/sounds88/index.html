@@ -21,22 +21,21 @@ h1 {
 
 #soundboard {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 8px;
     padding: 8px;
 }
 
-a.sound {
-    display: block;
+button {
     background: #222;
+    border: none;
     border-radius: 10px;
     padding: 12px 6px;
     font-size: 13px;
     color: white;
-    text-decoration: none;
 }
 
-a.sound:active {
+button:active {
     transform: scale(0.95);
     background: #444;
 }
@@ -46,16 +45,23 @@ a.sound:active {
     opacity: 0.6;
     margin-top: 4px;
 }
+
+@media (max-width: 480px) {
+    #soundboard {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
 </style>
 </head>
 
 <body>
 
 <h1>🎧 Klankenbord</h1>
-
 <div id="soundboard"></div>
 
 <script>
+const BASE_PATH = "/sounds88/sounds/"; // 🔥 JOUW CORRECTE ROOT PAD
+
 const sounds = [
     "Heheey.mp3",
     "Ja goed hoor.mp3",
@@ -78,21 +84,48 @@ const sounds = [
     "Mag ik jou zien komen mag ik jou zien klaarkomen.mp3"
 ];
 
+let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
+let currentAudio = null;
+
 function getPath(file) {
-    return "sounds/" + encodeURIComponent(file);
+    return BASE_PATH + encodeURIComponent(file);
 }
 
 function render() {
     const board = document.getElementById("soundboard");
+    board.innerHTML = "";
 
     sounds.forEach(file => {
-        const a = document.createElement("a");
-        a.className = "sound";
-        a.href = getPath(file);
-        a.innerHTML = `
+        const btn = document.createElement("button");
+
+        const plays = playCounts[file] || 0;
+
+        btn.innerHTML = `
             ${file.replace(".mp3","")}
+            <div class="plays">${plays}x</div>
         `;
-        board.appendChild(a);
+
+        btn.onclick = () => {
+
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            currentAudio = new Audio(getPath(file));
+            currentAudio.preload = "auto";
+            currentAudio.setAttribute("playsinline", "");
+
+            const p = currentAudio.play();
+            if (p) p.catch(e => console.log(e));
+
+            playCounts[file] = (playCounts[file] || 0) + 1;
+            localStorage.setItem("playCounts", JSON.stringify(playCounts));
+
+            render();
+        };
+
+        board.appendChild(btn);
     });
 }
 
