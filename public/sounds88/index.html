@@ -19,6 +19,18 @@ h1 {
     font-size: 18px;
 }
 
+/* 🔴 TEST knop */
+.test-btn {
+    margin: 10px;
+    padding: 15px;
+    font-size: 16px;
+    background: red;
+    border: none;
+    border-radius: 10px;
+    color: white;
+}
+
+/* soundboard */
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -26,7 +38,7 @@ h1 {
     padding: 8px;
 }
 
-button {
+button.sound {
     background: #222;
     border: none;
     border-radius: 10px;
@@ -37,7 +49,7 @@ button {
     line-height: 1.2;
 }
 
-button:active {
+button.sound:active {
     transform: scale(0.95);
     background: #444;
 }
@@ -52,11 +64,6 @@ button:active {
     #soundboard {
         grid-template-columns: repeat(3, 1fr);
     }
-
-    button {
-        font-size: 12px;
-        padding: 10px 5px;
-    }
 }
 </style>
 </head>
@@ -64,11 +71,14 @@ button:active {
 <body>
 
 <h1>🎧 Klankenbord</h1>
-<div id="soundboard"></div>
 
-<!-- 🔥 ALLE AUDIO VOORAF LADEN -->
-<div id="audio-container" style="display:none;">
-</div>
+<!-- 🔥 TEST -->
+<button class="test-btn" onclick="testAudio()">TEST GELUID</button>
+
+<!-- 🔊 test audio element -->
+<audio id="test-audio" src="sounds/Heheey.mp3" preload="auto" playsinline></audio>
+
+<div id="soundboard"></div>
 
 <script>
 const sounds = [
@@ -101,17 +111,20 @@ function getPath(file) {
     return "sounds/" + encodeURIComponent(file);
 }
 
-// 🔥 Maak audio elementen vooraf
-function preloadAudio() {
-    const container = document.getElementById("audio-container");
+/* 🔥 TEST functie */
+function testAudio() {
+    const audio = document.getElementById("test-audio");
+    audio.currentTime = 0;
+    audio.play().catch(err => console.log("Test error:", err));
+}
 
+/* preload */
+function preloadAudio() {
     sounds.forEach(file => {
         const audio = document.createElement("audio");
         audio.src = getPath(file);
         audio.preload = "auto";
         audio.setAttribute("playsinline", "");
-
-        container.appendChild(audio);
         audioMap[file] = audio;
     });
 }
@@ -130,6 +143,8 @@ function render() {
 
     sounds.forEach(file => {
         const btn = document.createElement("button");
+        btn.className = "sound";
+
         const plays = playCounts[file] || 0;
         const label = file.replace(".mp3", "");
 
@@ -138,8 +153,7 @@ function render() {
             <div class="plays">${plays}x</div>
         `;
 
-        btn.addEventListener("click", () => {
-
+        btn.onclick = () => {
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio.currentTime = 0;
@@ -148,25 +162,20 @@ function render() {
             const audio = audioMap[file];
             audio.currentTime = 0;
 
-            audio.play().catch(err => {
-                console.log("Play error:", err);
-            });
+            audio.play().catch(err => console.log("Play error:", err));
 
             currentAudio = audio;
-
-            if (navigator.vibrate) navigator.vibrate(20);
 
             playCounts[file] = (playCounts[file] || 0) + 1;
             localStorage.setItem("playCounts", JSON.stringify(playCounts));
 
             render();
-        });
+        };
 
         board.appendChild(btn);
     });
 }
 
-// 🔥 Eerst preloaden, dan renderen
 preloadAudio();
 render();
 </script>
