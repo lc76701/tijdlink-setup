@@ -21,21 +21,22 @@ h1 {
 
 #soundboard {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 8px;
     padding: 8px;
 }
 
-button {
+a.sound {
+    display: block;
     background: #222;
-    border: none;
     border-radius: 10px;
     padding: 12px 6px;
     font-size: 13px;
     color: white;
+    text-decoration: none;
 }
 
-button:active {
+a.sound:active {
     transform: scale(0.95);
     background: #444;
 }
@@ -45,22 +46,17 @@ button:active {
     opacity: 0.6;
     margin-top: 4px;
 }
-
-@media (max-width: 480px) {
-    #soundboard {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
 </style>
 </head>
 
 <body>
 
 <h1>🎧 Klankenbord</h1>
+
 <div id="soundboard"></div>
 
 <script>
-const files = [
+const sounds = [
     "Heheey.mp3",
     "Ja goed hoor.mp3",
     "MJaa.mp3",
@@ -82,59 +78,21 @@ const files = [
     "Mag ik jou zien komen mag ik jou zien klaarkomen.mp3"
 ];
 
-let plays = JSON.parse(localStorage.getItem("plays")) || {};
-let audioPool = {};
-let current = null;
-
-// 🔥 preload ALLES (belangrijk voor iOS)
-files.forEach(f => {
-    const a = new Audio("sounds/" + f.replace(/ /g, "%20"));
-    a.preload = "auto";
-    a.setAttribute("playsinline", "");
-    audioPool[f] = a;
-});
+function getPath(file) {
+    return "sounds/" + encodeURIComponent(file);
+}
 
 function render() {
     const board = document.getElementById("soundboard");
-    board.innerHTML = "";
 
-    files.forEach(file => {
-        const btn = document.createElement("button");
-
-        btn.innerHTML = `
+    sounds.forEach(file => {
+        const a = document.createElement("a");
+        a.className = "sound";
+        a.href = getPath(file);
+        a.innerHTML = `
             ${file.replace(".mp3","")}
-            <div class="plays">${plays[file] || 0}x</div>
         `;
-
-        btn.onclick = () => {
-
-            // stop vorige
-            if (current) {
-                current.pause();
-                current.currentTime = 0;
-            }
-
-            const audio = audioPool[file];
-            audio.currentTime = 0;
-
-            const p = audio.play();
-
-            if (p !== undefined) {
-                p.catch(err => console.log(err));
-            }
-
-            current = audio;
-
-            plays[file] = (plays[file] || 0) + 1;
-            localStorage.setItem("plays", JSON.stringify(plays));
-
-            // ❌ GEEN render() meer hier (dit was je bug)
-            btn.querySelector(".plays").innerText = plays[file] + "x";
-
-            if (navigator.vibrate) navigator.vibrate(20);
-        };
-
-        board.appendChild(btn);
+        board.appendChild(a);
     });
 }
 
