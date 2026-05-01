@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Klankenbord</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -12,13 +13,19 @@ body {
     color: white;
     text-align: center;
 }
-h1 { padding: 10px; font-size: 18px; }
+
+h1 {
+    padding: 10px;
+    font-size: 18px;
+}
+
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 8px;
     padding: 8px;
 }
+
 button {
     background: #222;
     border: none;
@@ -29,98 +36,140 @@ button {
     cursor: pointer;
     line-height: 1.2;
 }
+
 button:active {
     transform: scale(0.95);
     background: #444;
 }
+
 .plays {
     font-size: 10px;
     opacity: 0.6;
     margin-top: 4px;
 }
+
 @media (max-width: 480px) {
-    #soundboard { grid-template-columns: repeat(3, 1fr); }
-    button { font-size: 12px; padding: 10px 5px; }
+    #soundboard {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    button {
+        font-size: 12px;
+        padding: 10px 5px;
+    }
 }
 </style>
 </head>
+
 <body>
+
 <h1>🎧 Klankenbord</h1>
 <div id="soundboard"></div>
 
+<!-- 🔥 ALLE AUDIO VOORAF LADEN -->
+<div id="audio-container" style="display:none;">
+</div>
+
 <script>
 const sounds = [
-    "Heheey.mp3", "Ja goed hoor.mp3", "MJaa.mp3", "Nee.mp3",
-    "Met jou ook.mp3", "Ja doe maar.mp3", "Ooo wat geil.mp3",
-    "Oo wacht even.mp3", "Ja zometeen.mp3", "Ik hoor je niet.mp3",
-    "Okee.mp3", "Ja ik hoor je.mp3", "Eerst even klaarkomen.mp3",
-    "Vond je het geil?.mp3", "Tot de volgende keer.mp3",
-    "Ja oke is goed dat wil ik wel.mp3", "Waarom zo ongeduldig.mp3",
+    "Heheey.mp3",
+    "Ja goed hoor.mp3",
+    "MJaa.mp3",
+    "Nee.mp3",
+    "Met jou ook.mp3",
+    "Ja doe maar.mp3",
+    "Ooo wat geil.mp3",
+    "Oo wacht even.mp3",
+    "Ja zometeen.mp3",
+    "Ik hoor je niet.mp3",
+    "Okee.mp3",
+    "Ja ik hoor je.mp3",
+    "Eerst even klaarkomen.mp3",
+    "Vond je het geil?.mp3",
+    "Tot de volgende keer.mp3",
+    "Ja oke is goed dat wil ik wel.mp3",
+    "Waarom zo ongeduldig.mp3",
     "Ja ik wil eerst even klaarkomen.mp3",
     "Mag ik jou zien komen mag ik jou zien klaarkomen.mp3"
 ];
 
 let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
-let audio = new Audio();
+let audioMap = {};
+let currentAudio = null;
 
 function getPath(file) {
     return "sounds/" + encodeURIComponent(file);
 }
 
-function sortSounds() {
-    sounds.sort((a, b) => (playCounts[b] || 0) - (playCounts[a] || 0));
+// 🔥 Maak audio elementen vooraf
+function preloadAudio() {
+    const container = document.getElementById("audio-container");
+
+    sounds.forEach(file => {
+        const audio = document.createElement("audio");
+        audio.src = getPath(file);
+        audio.preload = "auto";
+        audio.setAttribute("playsinline", "");
+
+        container.appendChild(audio);
+        audioMap[file] = audio;
+    });
 }
 
-function playSound(file) {
-    const filePath = getPath(file);
-    
-    audio.pause();
-    audio = new Audio();           // Nieuwe instance voor iOS
-    audio.preload = "metadata";
-    audio.setAttribute("playsinline", "");
-    audio.src = filePath;
-
-    // Wacht op metadata (cruciaal op iOS)
-    audio.addEventListener('loadedmetadata', () => {
-        audio.play().catch(err => {
-            console.error("Play error:", err.name, err.message);
-            // Extra fallback
-            setTimeout(() => audio.play().catch(e => console.error(e)), 200);
-        });
-    }, { once: true });
-
-    audio.load();
-
-    // Teller updaten + UI verversen
-    playCounts[file] = (playCounts[file] || 0) + 1;
-    localStorage.setItem("playCounts", JSON.stringify(playCounts));
-    
-    render();           // ← Belangrijk!
-    
-    if (navigator.vibrate) navigator.vibrate(20);
+function sortSounds() {
+    sounds.sort((a, b) => {
+        return (playCounts[b] || 0) - (playCounts[a] || 0);
+    });
 }
 
 function render() {
     const board = document.getElementById("soundboard");
     board.innerHTML = "";
+
     sortSounds();
-    
+
     sounds.forEach(file => {
         const btn = document.createElement("button");
         const plays = playCounts[file] || 0;
         const label = file.replace(".mp3", "");
-        
-        btn.innerHTML = `${label}<div class="plays">${plays}x</div>`;
-        
-        const handler = () => playSound(file);
-        btn.addEventListener("click", handler);
-        btn.addEventListener("touchend", handler, { passive: true });
-        
+
+        btn.innerHTML = `
+            ${label}
+            <div class="plays">${plays}x</div>
+        `;
+
+        btn.addEventListener("click", () => {
+
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            const audio = audioMap[file];
+            audio.currentTime = 0;
+
+            audio.play().catch(err => {
+                console.log("Play error:", err);
+            });
+
+            currentAudio = audio;
+
+            if (navigator.vibrate) navigator.vibrate(20);
+
+            playCounts[file] = (playCounts[file] || 0) + 1;
+            localStorage.setItem("playCounts", JSON.stringify(playCounts));
+
+            render();
+        });
+
         board.appendChild(btn);
     });
 }
 
+// 🔥 Eerst preloaden, dan renderen
+preloadAudio();
 render();
 </script>
+
 </body>
 </html>
