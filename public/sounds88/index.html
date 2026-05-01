@@ -19,7 +19,6 @@ h1 {
     font-size: 18px;
 }
 
-/* 🔥 Veel knoppen op scherm */
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -49,7 +48,6 @@ button:active {
     margin-top: 4px;
 }
 
-/* 📱 Extra compact op mobiel */
 @media (max-width: 480px) {
     #soundboard {
         grid-template-columns: repeat(3, 1fr);
@@ -94,6 +92,16 @@ const sounds = [
 let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
 let currentAudio = null;
 
+// 🔥 AudioContext unlock (mobiel fix)
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function unlockAudio() {
+    if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
+}
+document.addEventListener("touchstart", unlockAudio, { once: true });
+document.addEventListener("click", unlockAudio, { once: true });
+
 function getPath(file) {
     return "sounds/" + encodeURIComponent(file);
 }
@@ -113,7 +121,6 @@ function render() {
     sounds.forEach(file => {
         const btn = document.createElement("button");
         const plays = playCounts[file] || 0;
-
         const label = file.replace(".mp3", "");
 
         btn.innerHTML = `
@@ -128,14 +135,21 @@ function render() {
                 currentAudio.currentTime = 0;
             }
 
-            // speel nieuwe
-            currentAudio = new Audio(getPath(file));
-            currentAudio.play();
+            // 🔥 nieuwe audio (preload + playsinline)
+            currentAudio = new Audio();
+            currentAudio.src = getPath(file);
+            currentAudio.preload = "auto";
+            currentAudio.setAttribute("playsinline", "");
 
-            // kleine vibratie (mobiel)
-            if (navigator.vibrate) navigator.vibrate(30);
+            currentAudio.play().catch(err => {
+                console.log("Play error:", err);
+            });
 
-            // update teller
+            // 🔥 vibratie fix (alleen bij klik)
+            if (navigator.vibrate) {
+                navigator.vibrate([20]);
+            }
+
             playCounts[file] = (playCounts[file] || 0) + 1;
             localStorage.setItem("playCounts", JSON.stringify(playCounts));
 
