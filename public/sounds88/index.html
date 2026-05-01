@@ -90,17 +90,11 @@ const sounds = [
 ];
 
 let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
-let currentAudio = null;
 
-// 🔥 AudioContext unlock (mobiel fix)
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function unlockAudio() {
-    if (audioCtx.state === "suspended") {
-        audioCtx.resume();
-    }
-}
-document.addEventListener("touchstart", unlockAudio, { once: true });
-document.addEventListener("click", unlockAudio, { once: true });
+// 🔥 ÉÉN audio instance (belangrijk voor iOS)
+let audio = new Audio();
+audio.preload = "auto";
+audio.setAttribute("playsinline", "");
 
 function getPath(file) {
     return "sounds/" + encodeURIComponent(file);
@@ -128,33 +122,31 @@ function render() {
             <div class="plays">${plays}x</div>
         `;
 
-        btn.onclick = () => {
-            // stop vorige audio
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
+        btn.addEventListener("click", () => {
+
+            // 🔥 HARD reset audio (werkt beter op iPhone)
+            audio.pause();
+            audio.currentTime = 0;
+
+            audio.src = getPath(file);
+
+            // 🔥 DIRECT play (geen async ertussen)
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.log("Play error:", err);
+                });
             }
 
-            // 🔥 nieuwe audio (preload + playsinline)
-            currentAudio = new Audio();
-            currentAudio.src = getPath(file);
-            currentAudio.preload = "auto";
-            currentAudio.setAttribute("playsinline", "");
-
-            currentAudio.play().catch(err => {
-                console.log("Play error:", err);
-            });
-
-            // 🔥 vibratie fix (alleen bij klik)
-            if (navigator.vibrate) {
-                navigator.vibrate([20]);
-            }
+            // vibratie (werkt alleen op sommige devices)
+            if (navigator.vibrate) navigator.vibrate(20);
 
             playCounts[file] = (playCounts[file] || 0) + 1;
             localStorage.setItem("playCounts", JSON.stringify(playCounts));
 
             render();
-        };
+        });
 
         board.appendChild(btn);
     });
