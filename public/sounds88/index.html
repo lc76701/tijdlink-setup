@@ -19,18 +19,6 @@ h1 {
     font-size: 18px;
 }
 
-/* 🔴 TEST knop */
-.test-btn {
-    margin: 10px;
-    padding: 15px;
-    font-size: 16px;
-    background: red;
-    border: none;
-    border-radius: 10px;
-    color: white;
-}
-
-/* soundboard */
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -38,18 +26,16 @@ h1 {
     padding: 8px;
 }
 
-button.sound {
+button {
     background: #222;
     border: none;
     border-radius: 10px;
     padding: 12px 6px;
     font-size: 13px;
     color: white;
-    cursor: pointer;
-    line-height: 1.2;
 }
 
-button.sound:active {
+button:active {
     transform: scale(0.95);
     background: #444;
 }
@@ -71,17 +57,10 @@ button.sound:active {
 <body>
 
 <h1>🎧 Klankenbord</h1>
-
-<!-- 🔥 TEST -->
-<button class="test-btn" onclick="testAudio()">TEST GELUID</button>
-
-<!-- 🔊 test audio element -->
-<audio id="test-audio" src="sounds/Heheey.mp3" preload="auto" playsinline></audio>
-
 <div id="soundboard"></div>
 
 <script>
-const sounds = [
+const files = [
     "Heheey.mp3",
     "Ja goed hoor.mp3",
     "MJaa.mp3",
@@ -103,80 +82,62 @@ const sounds = [
     "Mag ik jou zien komen mag ik jou zien klaarkomen.mp3"
 ];
 
-let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
-let audioMap = {};
-let currentAudio = null;
+let plays = JSON.parse(localStorage.getItem("plays")) || {};
+let audioPool = {};
+let current = null;
 
-function getPath(file) {
-    return "sounds/" + encodeURIComponent(file);
-}
-
-/* 🔥 TEST functie */
-function testAudio() {
-    const audio = document.getElementById("test-audio");
-    audio.currentTime = 0;
-    audio.play().catch(err => console.log("Test error:", err));
-}
-
-/* preload */
-function preloadAudio() {
-    sounds.forEach(file => {
-        const audio = document.createElement("audio");
-        audio.src = getPath(file);
-        audio.preload = "auto";
-        audio.setAttribute("playsinline", "");
-        audioMap[file] = audio;
-    });
-}
-
-function sortSounds() {
-    sounds.sort((a, b) => {
-        return (playCounts[b] || 0) - (playCounts[a] || 0);
-    });
-}
+// 🔥 preload ALLES (belangrijk voor iOS)
+files.forEach(f => {
+    const a = new Audio("sounds/" + f.replace(/ /g, "%20"));
+    a.preload = "auto";
+    a.setAttribute("playsinline", "");
+    audioPool[f] = a;
+});
 
 function render() {
     const board = document.getElementById("soundboard");
     board.innerHTML = "";
 
-    sortSounds();
-
-    sounds.forEach(file => {
+    files.forEach(file => {
         const btn = document.createElement("button");
-        btn.className = "sound";
-
-        const plays = playCounts[file] || 0;
-        const label = file.replace(".mp3", "");
 
         btn.innerHTML = `
-            ${label}
-            <div class="plays">${plays}x</div>
+            ${file.replace(".mp3","")}
+            <div class="plays">${plays[file] || 0}x</div>
         `;
 
         btn.onclick = () => {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
+
+            // stop vorige
+            if (current) {
+                current.pause();
+                current.currentTime = 0;
             }
 
-            const audio = audioMap[file];
+            const audio = audioPool[file];
             audio.currentTime = 0;
 
-            audio.play().catch(err => console.log("Play error:", err));
+            const p = audio.play();
 
-            currentAudio = audio;
+            if (p !== undefined) {
+                p.catch(err => console.log(err));
+            }
 
-            playCounts[file] = (playCounts[file] || 0) + 1;
-            localStorage.setItem("playCounts", JSON.stringify(playCounts));
+            current = audio;
 
-            render();
+            plays[file] = (plays[file] || 0) + 1;
+            localStorage.setItem("plays", JSON.stringify(plays));
+
+            // ❌ GEEN render() meer hier (dit was je bug)
+            btn.querySelector(".plays").innerText = plays[file] + "x";
+
+            if (navigator.vibrate) navigator.vibrate(20);
         };
 
         board.appendChild(btn);
     });
 }
 
-preloadAudio();
 render();
 </script>
 
