@@ -19,6 +19,7 @@ h1 {
     font-size: 18px;
 }
 
+/* 🔥 grid */
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -33,6 +34,8 @@ button {
     padding: 12px 6px;
     font-size: 13px;
     color: white;
+    cursor: pointer;
+    line-height: 1.2;
 }
 
 button:active {
@@ -46,9 +49,35 @@ button:active {
     margin-top: 4px;
 }
 
+/* 🏆 top 3 highlight */
+.top {
+    background: linear-gradient(135deg, #333, #555);
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+}
+
+/* 🔄 subtiele reset knop */
+#resetBtn {
+    margin: 20px 0 30px;
+    font-size: 12px;
+    opacity: 0.5;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+#resetBtn:hover {
+    opacity: 0.8;
+}
+
 @media (max-width: 480px) {
     #soundboard {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    button {
+        font-size: 12px;
+        padding: 10px 5px;
     }
 }
 </style>
@@ -59,9 +88,9 @@ button:active {
 <h1>🎧 Klankenbord</h1>
 <div id="soundboard"></div>
 
-<script>
-const BASE_PATH = "/sounds88/sounds/"; // 🔥 jouw echte root
+<button id="resetBtn">reset statistieken</button>
 
+<script>
 const sounds = [
     "Heheey.mp3",
     "Ja goed hoor.mp3",
@@ -76,7 +105,7 @@ const sounds = [
     "Okee.mp3",
     "Ja ik hoor je.mp3",
     "Eerst even klaarkomen.mp3",
-    "Vond je het geil.mp3",
+    "Vond je het geil?.mp3",
     "Tot de volgende keer.mp3",
     "Ja oke is goed dat wil ik wel.mp3",
     "Waarom zo ongeduldig.mp3",
@@ -88,19 +117,32 @@ let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
 let currentAudio = null;
 
 function getPath(file) {
-    // 🔥 BELANGRIJK: spaties veilig encoden
-    return BASE_PATH + encodeURI(file);
+    return "sounds/" + encodeURIComponent(file);
+}
+
+/* 🔥 correcte sort */
+function getSortedSounds() {
+    return [...sounds].sort((a, b) => {
+        return (playCounts[b] || 0) - (playCounts[a] || 0);
+    });
 }
 
 function render() {
     const board = document.getElementById("soundboard");
     board.innerHTML = "";
 
-    sounds.forEach(file => {
+    const sorted = getSortedSounds();
+
+    sorted.forEach((file, index) => {
         const btn = document.createElement("button");
 
         const plays = playCounts[file] || 0;
         const label = file.replace(".mp3", "");
+
+        // 🏆 top 3 styling
+        if (index < 3 && plays > 0) {
+            btn.classList.add("top");
+        }
 
         btn.innerHTML = `
             ${label}
@@ -108,23 +150,15 @@ function render() {
         `;
 
         btn.onclick = () => {
-
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio.currentTime = 0;
             }
 
-            // 🔥 extra iOS-safe audio init
-            currentAudio = new Audio();
-            currentAudio.src = getPath(file);
-            currentAudio.preload = "auto";
-            currentAudio.setAttribute("playsinline", "");
+            currentAudio = new Audio(getPath(file));
+            currentAudio.play();
 
-            const playPromise = currentAudio.play();
-
-            if (playPromise) {
-                playPromise.catch(err => console.log("Play error:", err));
-            }
+            if (navigator.vibrate) navigator.vibrate(30);
 
             playCounts[file] = (playCounts[file] || 0) + 1;
             localStorage.setItem("playCounts", JSON.stringify(playCounts));
@@ -135,6 +169,13 @@ function render() {
         board.appendChild(btn);
     });
 }
+
+/* 🔄 reset */
+document.getElementById("resetBtn").onclick = () => {
+    localStorage.removeItem("playCounts");
+    playCounts = {};
+    render();
+};
 
 render();
 </script>
