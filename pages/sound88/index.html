@@ -19,7 +19,7 @@ h1 {
     font-size: 18px;
 }
 
-/* 🔥 Veel knoppen op scherm */
+/* 🔥 grid */
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -49,7 +49,27 @@ button:active {
     margin-top: 4px;
 }
 
-/* 📱 Extra compact op mobiel */
+/* 🏆 top 3 highlight */
+.top {
+    background: linear-gradient(135deg, #333, #555);
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+}
+
+/* 🔄 subtiele reset knop */
+#resetBtn {
+    margin: 20px 0 30px;
+    font-size: 12px;
+    opacity: 0.5;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+#resetBtn:hover {
+    opacity: 0.8;
+}
+
 @media (max-width: 480px) {
     #soundboard {
         grid-template-columns: repeat(3, 1fr);
@@ -68,6 +88,8 @@ button:active {
 <h1>🎧 Klankenbord</h1>
 <div id="soundboard"></div>
 
+<button id="resetBtn">reset statistieken</button>
+
 <script>
 const sounds = [
     "Heheey.mp3",
@@ -83,7 +105,7 @@ const sounds = [
     "Okee.mp3",
     "Ja ik hoor je.mp3",
     "Eerst even klaarkomen.mp3",
-    "Vond je het geil?.mp3",
+    "Vond je het geil_.mp3",
     "Tot de volgende keer.mp3",
     "Ja oke is goed dat wil ik wel.mp3",
     "Waarom zo ongeduldig.mp3",
@@ -98,8 +120,9 @@ function getPath(file) {
     return "sounds/" + encodeURIComponent(file);
 }
 
-function sortSounds() {
-    sounds.sort((a, b) => {
+/* 🔥 correcte sort */
+function getSortedSounds() {
+    return [...sounds].sort((a, b) => {
         return (playCounts[b] || 0) - (playCounts[a] || 0);
     });
 }
@@ -108,13 +131,18 @@ function render() {
     const board = document.getElementById("soundboard");
     board.innerHTML = "";
 
-    sortSounds();
+    const sorted = getSortedSounds();
 
-    sounds.forEach(file => {
+    sorted.forEach((file, index) => {
         const btn = document.createElement("button");
-        const plays = playCounts[file] || 0;
 
+        const plays = playCounts[file] || 0;
         const label = file.replace(".mp3", "");
+
+        // 🏆 top 3 styling
+        if (index < 3 && plays > 0) {
+            btn.classList.add("top");
+        }
 
         btn.innerHTML = `
             ${label}
@@ -122,20 +150,16 @@ function render() {
         `;
 
         btn.onclick = () => {
-            // stop vorige audio
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio.currentTime = 0;
             }
 
-            // speel nieuwe
             currentAudio = new Audio(getPath(file));
             currentAudio.play();
 
-            // kleine vibratie (mobiel)
             if (navigator.vibrate) navigator.vibrate(30);
 
-            // update teller
             playCounts[file] = (playCounts[file] || 0) + 1;
             localStorage.setItem("playCounts", JSON.stringify(playCounts));
 
@@ -145,6 +169,13 @@ function render() {
         board.appendChild(btn);
     });
 }
+
+/* 🔄 reset */
+document.getElementById("resetBtn").onclick = () => {
+    localStorage.removeItem("playCounts");
+    playCounts = {};
+    render();
+};
 
 render();
 </script>
