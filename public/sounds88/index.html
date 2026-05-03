@@ -19,7 +19,6 @@ h1 {
     font-size: 18px;
 }
 
-/* 🔥 grid */
 #soundboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -49,13 +48,13 @@ button:active {
     margin-top: 4px;
 }
 
-/* 🏆 top 3 highlight */
+/* 🏆 top 3 */
 .top {
     background: linear-gradient(135deg, #333, #555);
     box-shadow: 0 0 8px rgba(255,255,255,0.2);
 }
 
-/* 🔄 subtiele reset knop */
+/* 🔄 reset knop */
 #resetBtn {
     margin: 20px 0 30px;
     font-size: 12px;
@@ -91,6 +90,8 @@ button:active {
 <button id="resetBtn">reset statistieken</button>
 
 <script>
+const BASE_PATH = "/sounds88/sounds/"; // 🔥 BELANGRIJK
+
 const sounds = [
     "Heheey.mp3",
     "Ja goed hoor.mp3",
@@ -116,11 +117,12 @@ const sounds = [
 let playCounts = JSON.parse(localStorage.getItem("playCounts")) || {};
 let currentAudio = null;
 
+/* 🔥 iOS-safe path */
 function getPath(file) {
-    return "sounds/" + encodeURIComponent(file);
+    return BASE_PATH + encodeURI(file);
 }
 
-/* 🔥 correcte sort */
+/* 🔝 correcte sort */
 function getSortedSounds() {
     return [...sounds].sort((a, b) => {
         return (playCounts[b] || 0) - (playCounts[a] || 0);
@@ -139,7 +141,6 @@ function render() {
         const plays = playCounts[file] || 0;
         const label = file.replace(".mp3", "");
 
-        // 🏆 top 3 styling
         if (index < 3 && plays > 0) {
             btn.classList.add("top");
         }
@@ -155,8 +156,11 @@ function render() {
                 currentAudio.currentTime = 0;
             }
 
-            currentAudio = new Audio(getPath(file));
-            currentAudio.play();
+            currentAudio = new Audio();
+            currentAudio.src = getPath(file);
+            currentAudio.setAttribute("playsinline", "");
+
+            currentAudio.play().catch(err => console.log(err));
 
             if (navigator.vibrate) navigator.vibrate(30);
 
