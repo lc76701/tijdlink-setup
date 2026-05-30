@@ -32,12 +32,12 @@ export default function Nicole() {
     `💖 Wil je mij alsjeblieft betalen voor 'Tikkie' via ${baseUrl}/${slug}\n\nVia deze link kun je €${amount} betalen`;
 
   const generateBolText = (amount, url) =>
-    `💖 Wil je mij alsjeblieft betalen via bol cadeaukaart? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen\n\nVul mijn emailadres in: colindabrand@outlook.com`;
+    `💖 Wil je mij alsjeblieft betalen via bol cadeaukaart? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen`;
 
   const generateNeosurfText = (amount, url) =>
-    `💖 Wil je mij alsjeblieft betalen via Neosurf tegoed? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen`;
+    `💖 Wil je mij alsjeblieft betalen via neosurf cadeaukaart? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen`;
 
-  const bankText = `Liever via handmatige bankoverschrijving betalen? Dat kan ook: NL34BUNQ2106132808 tnv E. Tiggelaar (naam veranderd voor privacy maar rekening nr klopt)`;
+  const bankText = `Handmatige bankoverschrijving? Dat kan ook: NL34BUNQ2106132808 tnv E. Tiggelaar (naam veranderd voor privacy maar rekening nr klopt)`;
 
 const bolLinks = {
   NL: [
