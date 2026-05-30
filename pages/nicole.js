@@ -4,6 +4,8 @@ import Head from 'next/head';
 export default function Nicole() {
   const [slug, setSlug] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [bolCountry, setBolCountry] = useState('NL');
+  const [neosurfCountry, setNeosurfCountry] = useState('NL');
 
   const baseUrl = 'https://betaalverzoek.nu';
 
@@ -32,7 +34,44 @@ export default function Nicole() {
   const generateBolText = (amount, url) =>
     `💖 Wil je mij alsjeblieft betalen via bol cadeaukaart? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen\n\nVul mijn emailadres in: colindabrand@outlook.com`;
 
+  const generateNeosurfText = (amount, url) =>
+    `💖 Wil je mij alsjeblieft betalen via Neosurf tegoed? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen`;
+
   const bankText = `Liever via handmatige bankoverschrijving betalen? Dat kan ook: NL34BUNQ2106132808 tnv K. Bohak`;
+
+const bolLinks = {
+  NL: [
+    { amount: 25, url: 'https://www.opwaarderen.nl/bol-com-cadeaukaart-25-euro' },
+    { amount: 30, url: 'https://beltegoed.nl/order?productId=56280&quantity=1' },
+    { amount: 50, url: 'https://beltegoed.nl/order?productId=56361&quantity=1' },
+    { amount: 70, url: 'https://beltegoed.nl/order?productId=88345&quantity=1' },
+    { amount: 90, url: 'https://beltegoed.nl/order?productId=88345&quantity=1' },
+  ],
+  BE: [
+    { amount: 10, url: 'https://www.herladen.be/bol-com-cadeaubon-10-euro' },
+    { amount: 15, url: 'https://www.herladen.be/bol-com-cadeaubon-15-euro' },
+    { amount: 20, url: 'https://www.herladen.be/bol-com-cadeaubon-20-euro' },
+    { amount: 25, url: 'https://www.herladen.be/bol-com-cadeaubon-25-euro' },
+    { amount: 50, url: 'https://www.herladen.be/bol-com-cadeaubon-50-euro' },
+    { amount: 100, url: 'https://www.herladen.be/bol-com-cadeaubon-100-euro' },
+  ],
+};
+
+const neosurfLinks = {
+  NL: [
+    { amount: 10, url: 'https://www.opwaarderen.nl/neosurf-10-euro' },
+    { amount: 15, url: 'https://www.opwaarderen.nl/neosurf-15-euro' },
+    { amount: 30, url: 'https://www.opwaarderen.nl/neosurf-30-euro' },
+  ],
+  BE: [
+    { amount: 10, url: 'https://www.herladen.be/neosurf-10-euro' },
+    { amount: 15, url: 'https://www.herladen.be/neosurf-15-euro' },
+    { amount: 30, url: 'https://www.herladen.be/neosurf-30-euro' },
+  ],
+};
+
+  const activeBolLinks = bolLinks[bolCountry];
+  const activeNeosurfLinks = neosurfLinks[neosurfCountry];
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
@@ -42,6 +81,7 @@ export default function Nicole() {
       </Head>
 
       <h1>Actieve redirect link</h1>
+
       {slug ? (
         <>
           <p>
@@ -65,18 +105,73 @@ export default function Nicole() {
             </div>
           </div>
 
-          {/* Bol */}
+          {/* Neosurf */}
           <div style={{ marginTop: '2rem' }}>
+            <h2>Neosurf tegoed</h2>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button onClick={() => setNeosurfCountry('NL')}>🇳🇱 NL</button>
+              <button onClick={() => setNeosurfCountry('BE')}>🇧🇪 BE</button>
+            </div>
+
             <textarea
               style={{ width: '100%', height: '120px' }}
               readOnly
-              value={generateBolText(30, 'https://beltegoed.nl/order?productId=56280&quantity=1')}
+              value={generateNeosurfText(activeNeosurfLinks[0].amount, activeNeosurfLinks[0].url)}
             />
+
             <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <button onClick={() => handleCopy(generateBolText(30, 'https://beltegoed.nl/order?productId=56280&quantity=1'))}>Kopieer Bol-tekst</button>
-              <button onClick={() => handleCopy(generateBolText(50, 'https://beltegoed.nl/order?productId=56361&quantity=1'))}>€50</button>
-              <button onClick={() => handleCopy(generateBolText(70, 'https://beltegoed.nl/order?productId=88345&quantity=1'))}>€70</button>
-              <button onClick={() => handleCopy(generateBolText(90, 'https://beltegoed.nl/order?productId=88345&quantity=1'))}>€90</button>
+              <button
+                onClick={() =>
+                  handleCopy(generateNeosurfText(activeNeosurfLinks[0].amount, activeNeosurfLinks[0].url))
+                }
+              >
+                Kopieer Neosurf-tekst
+              </button>
+
+              {activeNeosurfLinks.map((item) => (
+                <button
+                  key={`${neosurfCountry}-${item.amount}`}
+                  onClick={() => handleCopy(generateNeosurfText(item.amount, item.url))}
+                >
+                  €{item.amount}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bol */}
+          <div style={{ marginTop: '2rem' }}>
+            <h2>Bol cadeaukaart</h2>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button onClick={() => setBolCountry('NL')}>🇳🇱 NL</button>
+              <button onClick={() => setBolCountry('BE')}>🇧🇪 BE</button>
+            </div>
+
+            <textarea
+              style={{ width: '100%', height: '120px' }}
+              readOnly
+              value={generateBolText(activeBolLinks[0].amount, activeBolLinks[0].url)}
+            />
+
+            <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() =>
+                  handleCopy(generateBolText(activeBolLinks[0].amount, activeBolLinks[0].url))
+                }
+              >
+                Kopieer Bol-tekst
+              </button>
+
+              {activeBolLinks.map((item) => (
+                <button
+                  key={`${bolCountry}-${item.amount}`}
+                  onClick={() => handleCopy(generateBolText(item.amount, item.url))}
+                >
+                  €{item.amount}
+                </button>
+              ))}
             </div>
           </div>
 
