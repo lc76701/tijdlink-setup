@@ -59,14 +59,18 @@ const bolLinks = {
 
 const neosurfLinks = {
   NL: [
-    { amount: 10, url: 'https://www.opwaarderen.nl/neosurf-10-euro' },
-    { amount: 15, url: 'https://www.opwaarderen.nl/neosurf-15-euro' },
-    { amount: 30, url: 'https://www.opwaarderen.nl/neosurf-30-euro' },
+    { amount: 5, url: 'https://kaartdirect.nl/product/neosurf-eur5' },
+    { amount: 10, url: 'https://kaartdirect.nl/product/neosurf-eur10' },
+    { amount: 15, url: 'https://kaartdirect.nl/product/neosurf-eur15' },
+    { amount: 25, url: 'https://kaartdirect.nl/product/neosurf-eur25' },
+    { amount: 30, url: 'https://kaartdirect.nl/product/neosurf-eur30' },
   ],
   BE: [
-    { amount: 10, url: 'https://www.herladen.be/neosurf-10-euro' },
-    { amount: 15, url: 'https://www.herladen.be/neosurf-15-euro' },
-    { amount: 30, url: 'https://www.herladen.be/neosurf-30-euro' },
+    { amount: 5, url: 'https://kaartdirect.be/product/neosurf-eur5' },
+    { amount: 10, url: 'https://kaartdirect.be/product/neosurf-eur10' },
+    { amount: 15, url: 'https://kaartdirect.be/product/neosurf-eur15' },
+    { amount: 25, url: 'https://kaartdirect.be/product/neosurf-eur25' },
+    { amount: 30, url: 'https://kaartdirect.be/product/neosurf-eur30' },
   ],
 };
 
