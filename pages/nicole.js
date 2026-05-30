@@ -37,7 +37,7 @@ export default function Nicole() {
   const generateNeosurfText = (amount, url) =>
     `💖 Wil je mij alsjeblieft betalen via Neosurf tegoed? Binnen 1 minuut via: ${url}\n\nVia deze link kun je €${amount} betalen`;
 
-  const bankText = `Liever via handmatige bankoverschrijving betalen? Dat kan ook: NL34BUNQ2106132808 tnv K. Bohak`;
+  const bankText = `Liever via handmatige bankoverschrijving betalen? Dat kan ook: NL34BUNQ2106132808 tnv E. Tiggelaar (naam veranderd voor privacy maar rekening nr klopt)`;
 
 const bolLinks = {
   NL: [
