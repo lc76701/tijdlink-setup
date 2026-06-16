@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   } while (await redis.get(`slug-${slug}`));
 
   await redis.set(`slug-${slug}`, {
-    target: "https://tikkie.me/pay/1kpl191nr0n2djvc2vh8",
+    target: "https://tikkie.me/pay/nq2hibu6944hslimt62r",
     firstClick: null,
   });
 
