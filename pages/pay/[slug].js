@@ -21,6 +21,17 @@ export async function getServerSideProps({ params, query, req }) {
   const userAgent = req.headers['user-agent'] || 'unknown';
 
   /* --------------------------------------------------
+     WHATSAPP / META PREVIEWBOT DETECTIE
+
+     Alleen gebruikt om te voorkomen dat de preview
+     de timer start. Verder verandert er niets.
+  -------------------------------------------------- */
+  const isWhatsAppPreviewBot =
+    /WhatsApp|facebookexternalhit|Meta-ExternalAgent|Meta-ExternalFetcher/i.test(
+      userAgent
+    );
+
+  /* --------------------------------------------------
      LOG HELPER (ALTIJD indexeren)
   -------------------------------------------------- */
   const log = async (event) => {
@@ -79,8 +90,15 @@ export async function getServerSideProps({ params, query, req }) {
 
   /* --------------------------------------------------
      START TIMER (1e echte klik)
+
+     Enige functionele wijziging:
+     WhatsApp/Meta-previewbots starten de timer niet.
   -------------------------------------------------- */
-  if (!parsed.firstClick && flow !== 'verify-blocked') {
+  if (
+    !parsed.firstClick &&
+    flow !== 'verify-blocked' &&
+    !isWhatsAppPreviewBot
+  ) {
     await redis.set(`slug-${slug}`, {
       ...parsed,
       firstClick: now,
