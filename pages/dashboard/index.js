@@ -22,12 +22,19 @@ export async function getServerSideProps({ query, req }) {
   let total = 0;
 
   if (search) {
-    // 🔎 Zoekmodus: scan max 100 recente logs (snel)
-    const ids = await redis.zrange('logs:index', 0, 99, { rev: true });
+    // 🔎 Zoekmodus: scan alle logs
+    const ids = await redis.zrange('logs:index', 0, -1, { rev: true });
 
     for (const id of ids || []) {
       const data = await redis.get(id);
-      if (data && data.slug?.toLowerCase().includes(search)) {
+
+      if (
+        data &&
+        (
+          data.slug?.toLowerCase().includes(search) ||
+          data.ip?.toLowerCase().includes(search)
+        )
+      ) {
         logs.push(data);
       }
     }
@@ -71,11 +78,14 @@ export default function Dashboard({ logs, page, totalPages, total, search }) {
         <input
           type="text"
           name="q"
-          placeholder="Zoek op slug…"
+          placeholder="Zoek op slug of IP-adres…"
           defaultValue={search}
           style={{ padding: '0.5rem', width: 260 }}
         />
-        <button style={{ marginLeft: '0.5rem' }}>Zoeken</button>
+
+        <button style={{ marginLeft: '0.5rem' }}>
+          Zoeken
+        </button>
 
         {search && (
           <a href="/dashboard" style={{ marginLeft: '1rem' }}>
@@ -87,7 +97,11 @@ export default function Dashboard({ logs, page, totalPages, total, search }) {
       <p>
         Totaal <strong>{total}</strong> kliks
         {!search && (
-          <> · Pagina <strong>{page}</strong> van <strong>{totalPages}</strong></>
+          <>
+            {' '}
+            · Pagina <strong>{page}</strong> van{' '}
+            <strong>{totalPages}</strong>
+          </>
         )}
       </p>
 
@@ -111,6 +125,7 @@ export default function Dashboard({ logs, page, totalPages, total, search }) {
             <th>User Agent</th>
           </tr>
         </thead>
+
         <tbody>
           {logs.map((log, i) => (
             <tr key={i}>
@@ -126,7 +141,11 @@ export default function Dashboard({ logs, page, totalPages, total, search }) {
               <td>{log.event || '—'}</td>
 
               <td>
-                <a href={`/pay/${log.slug}`} target="_blank" rel="noreferrer">
+                <a
+                  href={`/pay/${log.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   /pay/{log.slug}
                 </a>
               </td>
@@ -142,7 +161,9 @@ export default function Dashboard({ logs, page, totalPages, total, search }) {
                   >
                     📍 kaart
                   </a>
-                ) : '—'}
+                ) : (
+                  '—'
+                )}
               </td>
 
               <td>
@@ -167,7 +188,13 @@ export default function Dashboard({ logs, page, totalPages, total, search }) {
 
       {/* 📄 PAGINATIE */}
       {!search && (
-        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+        <div
+          style={{
+            marginTop: '1.5rem',
+            display: 'flex',
+            gap: '1rem',
+          }}
+        >
           {page > 1 && (
             <Link href={`/dashboard?page=${page - 1}`}>
               ← Vorige
