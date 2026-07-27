@@ -32,7 +32,8 @@ export async function getServerSideProps({ query, req }) {
         data &&
         (
           data.slug?.toLowerCase().includes(search) ||
-          data.ip?.toLowerCase().includes(search)
+          data.ip?.toLowerCase().includes(search) ||
+          data.userAgent?.toLowerCase().includes(search)
         )
       ) {
         logs.push(data);
